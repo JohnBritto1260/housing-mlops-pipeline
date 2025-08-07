@@ -1,0 +1,13 @@
+scikit-learn
+pandas
+numpy
+matplotlib
+mlflow
+dvc
+fastapi
+uvicorn
+pydantic
+joblib
+sqlite3
+python-dotenv
+requests
