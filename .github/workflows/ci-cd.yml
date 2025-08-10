@@ -52,7 +52,7 @@ jobs:
         with:
           context: .
           push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest,${{ secrets.DOCKERHUB_USERNAME }}/housing-api:${{ github.sha }}
+          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
 
   deploy:
     needs: build-and-push
@@ -64,3 +64,5 @@ jobs:
           docker stop housing-api || true
           docker rm housing-api || true
           docker run -d --name housing-api -p 8000:8000 --restart always ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
+
+
