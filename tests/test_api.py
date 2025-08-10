@@ -1,12 +1,24 @@
-from fastapi.testclient import TestClient
+import sys
+import os
+import json
+import pytest
 from housing.api.main import app
 
-client = TestClient(app)
+# Ensure project root is in sys.path
+sys.path.append(
+    os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
+)
 
-sys.path.append(os.path.abspath(os.path.join
-(os.path.dirname(__file__), "..")))
 
-def test_predict_endpoint():
+@pytest.fixture
+def client():
+    """Flask test client fixture."""
+    with app.test_client() as client:
+        yield client
+
+
+def test_predict_endpoint(client):
+    """Test the /predict endpoint."""
     payload = {
         "MedInc": 8.5,
         "HouseAge": 20,
@@ -18,8 +30,13 @@ def test_predict_endpoint():
         "Longitude": -122.23,
     }
 
-    res = client.post("/predict", json=payload)
+    res = client.post(
+        "/predict",
+        data=json.dumps(payload),
+        content_type="application/json"
+    )
+
     assert res.status_code == 200
-    body = res.json()
+    body = res.get_json()
     assert "prediction" in body
     assert isinstance(body["prediction"], float)
