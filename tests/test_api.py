@@ -20,7 +20,7 @@ def client():
 def test_predict_endpoint(client):
     """Test the /predict endpoint."""
     payload = {
-        "MedInc": 8.5,
+        "MedInc": 8.4,
         "HouseAge": 20,
         "AveRooms": 5.2,
         "AveBedrms": 1.1,
