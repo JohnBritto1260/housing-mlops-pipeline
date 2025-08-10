@@ -1,6 +1,4 @@
-import os
 import pandas as pd
-import joblib
 import mlflow
 import mlflow.sklearn
 
@@ -8,7 +6,6 @@ from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
 from sklearn.tree import DecisionTreeRegressor
 from sklearn.metrics import mean_squared_error, mean_absolute_error
-
 from mlflow.models.signature import infer_signature
 
 # Set the MLflow tracking URI (your local MLflow server)
@@ -16,10 +13,12 @@ mlflow.set_tracking_uri("http://localhost:5000")
 
 
 def load_data():
+    """Load California housing dataset."""
     return pd.read_csv("data/raw/california.csv")
 
 
 def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test):
+    """Train, log, and register a model with MLflow."""
     with mlflow.start_run(run_name=model_name) as run:
         print(f"🏃 Training and logging model: {model_name}")
 
@@ -44,7 +43,7 @@ def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test
             model,
             artifact_path=artifact_path,
             input_example=input_example,
-            signature=signature
+            signature=signature,
         )
 
         print(f"✅ Logged model: {artifact_path}")
@@ -52,11 +51,17 @@ def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test
         # Register model in MLflow Model Registry
         result = mlflow.register_model(
             model_uri=f"runs:/{run.info.run_id}/{artifact_path}",
-            name="best_housing_model"
+            name="best_housing_model",
         )
 
-        print(f"✅ Successfully registered model: {result.name} (version {result.version})")
-        print(f"📦 View run {model_name} at: {mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}")
+        print(
+            f"✅ Successfully registered model: {result.name} "
+            f"(version {result.version})"
+        )
+        print(
+            f"📦 View run {model_name} at: "
+            f"{mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
+        )
 
 
 if __name__ == "__main__":
@@ -67,5 +72,14 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
 
     # Train and register both models
-    train_and_register_model(LinearRegression(), "LinearRegression", X_train, y_train, X_test, y_test)
-    train_and_register_model(DecisionTreeRegressor(max_depth=5), "DecisionTree", X_train, y_train, X_test, y_test)
+    train_and_register_model(
+        LinearRegression(), "LinearRegression", X_train, y_train, X_test, y_test
+    )
+    train_and_register_model(
+        DecisionTreeRegressor(max_depth=5),
+        "DecisionTree",
+        X_train,
+        y_train,
+        X_test,
+        y_test,
+    )

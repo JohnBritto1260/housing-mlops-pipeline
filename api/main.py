@@ -4,7 +4,10 @@ import joblib
 import numpy as np
 
 app = FastAPI()
+
+# Load model
 model = joblib.load("models/DecisionTree.pkl")
+
 
 class HouseFeatures(BaseModel):
     MedInc: float
@@ -16,8 +19,10 @@ class HouseFeatures(BaseModel):
     Latitude: float
     Longitude: float
 
+
 @app.post("/predict")
 def predict(data: HouseFeatures):
+    """Predict house value from features."""
     features = np.array([[v for v in data.dict().values()]])
     prediction = model.predict(features)[0]
-    return {"prediction": prediction}
+    return {"prediction": float(prediction)}
