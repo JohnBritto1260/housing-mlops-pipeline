@@ -17,12 +17,14 @@ def load_data():
     return pd.read_csv("data/raw/california.csv")
 
 
-def train_and_register_model(model, 
-    model_name, 
-    X_train, 
-    y_train, 
-    X_test, 
-    y_test):
+def train_and_register_model(
+    model,
+    model_name,
+    X_train,
+    y_train,
+    X_test,
+    y_test
+):
     """Train, log, and register a model with MLflow."""
     with mlflow.start_run(run_name=model_name) as run:
         print(f"🏃 Training and logging model: {model_name}")
@@ -42,7 +44,10 @@ def train_and_register_model(model,
         # Log model
         artifact_path = f"{model_name}_model"
         input_example = X_test[:1]
-        signature = infer_signature(X_train, model.predict(X_train))
+        signature = infer_signature(
+            X_train,
+            model.predict(X_train)
+        )
 
         mlflow.sklearn.log_model(
             model,
@@ -65,7 +70,8 @@ def train_and_register_model(model,
         )
         print(
             f"📦 View run {model_name} at: {mlflow.get_tracking_uri()}"
-            f"/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
+            f"/#/experiments/{run.info.experiment_id}/runs/"
+            f"{run.info.run_id}"
         )
 
 
@@ -74,11 +80,20 @@ if __name__ == "__main__":
     df = load_data()
     X = df.drop("MedHouseVal", axis=1)
     y = df["MedHouseVal"]
-    X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2)
+    X_train, X_test, y_train, y_test = train_test_split(
+        X,
+        y,
+        test_size=0.2
+    )
 
     # Train and register both models
     train_and_register_model(
-        LinearRegression(), "LinearRegression", X_train, y_train, X_test, y_test
+        LinearRegression(),
+        "LinearRegression",
+        X_train,
+        y_train,
+        X_test,
+        y_test
     )
     train_and_register_model(
         DecisionTreeRegressor(max_depth=5),
@@ -86,5 +101,5 @@ if __name__ == "__main__":
         X_train,
         y_train,
         X_test,
-        y_test,
+        y_test
     )
