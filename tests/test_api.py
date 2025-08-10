@@ -3,6 +3,8 @@ from housing.api.main import app
 
 client = TestClient(app)
 
+sys.path.append(os.path.abspath(os.path.join
+(os.path.dirname(__file__), "..")))
 
 def test_predict_endpoint():
     payload = {
