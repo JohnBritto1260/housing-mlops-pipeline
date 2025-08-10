@@ -17,7 +17,12 @@ def load_data():
     return pd.read_csv("data/raw/california.csv")
 
 
-def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test):
+def train_and_register_model(model, 
+    model_name, 
+    X_train, 
+    y_train, 
+    X_test, 
+    y_test):
     """Train, log, and register a model with MLflow."""
     with mlflow.start_run(run_name=model_name) as run:
         print(f"🏃 Training and logging model: {model_name}")
@@ -59,8 +64,8 @@ def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test
             f"(version {result.version})"
         )
         print(
-            f"📦 View run {model_name} at: "
-            f"{mlflow.get_tracking_uri()}/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
+            f"📦 View run {model_name} at: {mlflow.get_tracking_uri()}"
+            f"/#/experiments/{run.info.experiment_id}/runs/{run.info.run_id}"
         )
 
 
