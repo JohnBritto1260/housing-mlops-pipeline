@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/323681895daa4955badf53124b60eee6/artifacts
+end_time: 1754557003482
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: 323681895daa4955badf53124b60eee6
+run_name: DecisionTree
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754557000758
+status: 3
+tags: []
+user_id: ecom-pjohn

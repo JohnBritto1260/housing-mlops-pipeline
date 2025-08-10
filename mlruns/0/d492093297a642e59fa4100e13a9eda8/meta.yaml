@@ -1,0 +1,14 @@
+artifact_uri: mlflow-artifacts:/0/d492093297a642e59fa4100e13a9eda8/artifacts
+end_time: 1754555602789
+entry_point_name: ''
+experiment_id: '0'
+lifecycle_stage: active
+run_id: d492093297a642e59fa4100e13a9eda8
+run_name: LinearRegression
+source_name: ''
+source_type: 4
+source_version: ''
+start_time: 1754555602756
+status: 4
+tags: []
+user_id: ecom-pjohn
