@@ -8,6 +8,5 @@ fastapi
 uvicorn
 pydantic
 joblib
-sqlite3
 python-dotenv
 requests
