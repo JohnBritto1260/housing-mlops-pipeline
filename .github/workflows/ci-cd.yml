@@ -47,22 +47,33 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Build and push
-        uses: docker/build-push-action@v6
-        with:
-          context: .
-          push: true
-          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest,${{ secrets.DOCKERHUB_USERNAME }}/housing-api:${{ github.sha }}
+#      - name: Build and push
+#        uses: docker/build-push-action@v6
+#        with:
+#          context: .
+#          push: true
+#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest,${{ secrets.DOCKERHUB_USERNAME }}/housing-api:${{ github.sha }}
 
+      - name: Build and push images with Docker Compose
+        run: |
+          docker compose build
+          docker compose push
   deploy:
     needs: build-and-push
     runs-on: self-hosted
-    steps:
-      - name: Pull & Run Docker Locally
-        run: |
-          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
-          docker stop housing-api || true
-          docker rm housing-api || true
-          docker run -d --name housing-api -p 8000:8000 --restart always ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
+#    steps:
+#      - name: Pull & Run Docker Locally
+#        run: |
+#          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
+#          docker stop housing-api || true
+#          docker rm housing-api || true
+#          docker run -d --name housing-api -p 8000:8000 --restart always ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
 
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Deploy with Docker Compose
+        run: |
+          docker compose pull
+          docker compose up -d --remove-orphans
 

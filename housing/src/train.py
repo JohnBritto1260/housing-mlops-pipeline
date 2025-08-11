@@ -1,6 +1,7 @@
 import pandas as pd
 import mlflow
 import mlflow.sklearn
+import pickle
 
 from sklearn.model_selection import train_test_split
 from sklearn.linear_model import LinearRegression
@@ -14,7 +15,7 @@ mlflow.set_tracking_uri("http://localhost:5000")
 
 def load_data():
     """Load California housing dataset."""
-    return pd.read_csv("data/raw/california.csv")
+    return pd.read_csv("housing/data/raw/california.csv")
 
 
 def train_and_register_model(
@@ -74,6 +75,19 @@ def train_and_register_model(
             f"{run.info.run_id}"
         )
 
+        # --- NEW: Save local pickle file for the LinearRegression model ---
+        if model_name == "LinearRegression":
+            local_path = "housing/models/LinearRegression.pkl"
+            with open(local_path, "wb") as f:
+                pickle.dump(model, f)
+            print(f"💾 Saved local pickle model at: {local_path}")
+
+        # --- NEW: Save local pickle file for the DecisionTree model ---
+        if model_name == "DecisionTree":
+            local_path = "housing/models/DecisionTree.pkl"
+            with open(local_path, "wb") as f:
+                pickle.dump(model, f)
+            print(f"💾 Saved local pickle model at: {local_path}")
 
 if __name__ == "__main__":
     # Load and split data
@@ -83,7 +97,8 @@ if __name__ == "__main__":
     X_train, X_test, y_train, y_test = train_test_split(
         X,
         y,
-        test_size=0.2
+        test_size=0.2,
+        random_state=42
     )
 
     # Train and register both models

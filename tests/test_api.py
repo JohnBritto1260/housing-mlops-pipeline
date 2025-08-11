@@ -1,42 +1,40 @@
-import sys
-import os
-import json
 import pytest
-from housing.api.main import app
-
-# Ensure project root is in sys.path
-sys.path.append(
-    os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
-)
-
+import json
+from housing.api.main import app, get_db
 
 @pytest.fixture
 def client():
-    """Flask test client fixture."""
+    app.config['TESTING'] = True
     with app.test_client() as client:
         yield client
 
-
-def test_predict_endpoint(client):
-    """Test the /predict endpoint."""
-    payload = {
-        "MedInc": 8.4,
-        "HouseAge": 20,
-        "AveRooms": 5.2,
-        "AveBedrms": 1.1,
-        "Population": 850,
-        "AveOccup": 3.1,
+def test_predict_success(client):
+    # Replace with your model's actual expected input feature names
+    payload = [{
+        "MedInc": 8.3252,
+        "HouseAge": 41.0,
+        "AveRooms": 6.984127,
+        "AveBedrms": 1.02381,
+        "Population": 322.0,
+        "AveOccup": 2.555556,
         "Latitude": 37.88,
-        "Longitude": -122.23,
-    }
+        "Longitude": -122.23
+    }]
+    response = client.post("/predict", json=payload)
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "predictions" in data
+    assert isinstance(data["predictions"], list)
 
-    res = client.post(
-        "/predict",
-        data=json.dumps(payload),
-        content_type="application/json"
-    )
+def test_predict_no_data(client):
+    response = client.post("/predict", json=None)
+    assert response.status_code == 400
+    data = response.get_json()
+    assert "error" in data
 
-    assert res.status_code == 200
-    body = res.get_json()
-    assert "prediction" in body
-    assert isinstance(body["prediction"], float)
+def test_metrics_endpoint(client):
+    response = client.get("/metrics")
+    assert response.status_code == 200
+    data = response.get_json()
+    assert "/predict" in data
+    assert isinstance(data["/predict"], int)
