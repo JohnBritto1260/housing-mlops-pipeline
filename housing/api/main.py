@@ -8,7 +8,11 @@ from datetime import datetime
 from flask import Flask, request, jsonify, g, Response
 import pandas as pd
 import mlflow
-from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
+from prometheus_client import (
+    Counter,
+    generate_latest,
+    CONTENT_TYPE_LATEST,
+)
 
 # ------------------------------
 # 1. Setup Logging
@@ -53,7 +57,8 @@ DATABASE = "logs.db"
 
 # Prometheus Counter
 PREDICT_REQUESTS = Counter(
-    "housing_predict_requests_total", "Total number of /predict requests"
+    "housing_predict_requests_total",
+    "Total number of /predict requests",
 )
 
 
@@ -94,7 +99,9 @@ def predict():
         logger.error("Invalid content-type: must be JSON")
         return (
             jsonify(
-                {"error": "Request content-type must be application/json"}
+                {
+                    "error": "Request content-type must be application/json"
+                }
             ),
             400,
         )
@@ -126,7 +133,9 @@ def predict():
         )
 
         # Log input
-        logger.info(f"Prediction input: {input_df.to_dict(orient='records')}")
+        logger.info(
+            f"Prediction input: {input_df.to_dict(orient='records')}"
+        )
         preds = model.predict(input_df)
         logger.info(f"Prediction output: {preds.tolist()}")
 
