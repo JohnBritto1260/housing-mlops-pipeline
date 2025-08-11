@@ -16,6 +16,7 @@ services:
     build:
       context: ./housing/api
       dockerfile: Dockerfile
+    image: johnbritto1260/housing-api:latest
     environment:
       - MLFLOW_TRACKING_URI=http://192.168.0.206:5000
     ports:
