@@ -7,7 +7,7 @@ on:
     branches: [ main ]
 
 jobs:
-  test:
+  setup-env-and-test:
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -30,7 +30,7 @@ jobs:
         run: pytest -q
 
   build-and-push:
-    needs: test
+    needs: setup-env-and-test
     runs-on: self-hosted
     steps:
       - uses: actions/checkout@v4
@@ -54,10 +54,14 @@ jobs:
 #          push: true
 #          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest,${{ secrets.DOCKERHUB_USERNAME }}/housing-api:${{ github.sha }}
 
-      - name: Build and push images with Docker Compose
+      - name: Build with Docker Compose
         run: |
           docker compose build
-          docker compose push
+
+      # 5. Push image to Docker Hub
+      - name: Push Docker image
+        run: docker compose push
+
   deploy:
     needs: build-and-push
     runs-on: self-hosted
