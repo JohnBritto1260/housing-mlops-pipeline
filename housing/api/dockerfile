@@ -1,20 +1,33 @@
-FROM python:3.10-slim
+# ===== 1. Base image =====
+FROM python:3.10-slim AS base
 
-# Set working directory
+# Set environment variables for Python
+ENV PYTHONDONTWRITEBYTECODE=1 \
+    PYTHONUNBUFFERED=1 \
+    PATH="/root/.local/bin:$PATH"
+
+# Install system dependencies
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    build-essential \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# ===== 2. Install dependencies first for caching =====
 WORKDIR /app
 
 # Copy requirements and install
 COPY requirements.txt .
-RUN pip install --no-cache-dir \
+RUN pip install --upgrade pip && \
+    pip install --no-cache-dir \
     -i https://pypi.org/simple \
     --extra-index-url https://mirrors.aliyun.com/pypi/simple \
     -r requirements.txt
 
-# Copy the app code
-COPY . .
+# ===== 3. Copy application code =====
+COPY housing ./housing
 
-# Expose port
+# ===== 4. Expose API port =====
 EXPOSE 5001
 
-# Run the Flask app
-CMD ["python3", "main.py"]
+# ===== 5. Run API =====
+CMD ["python", "-m", "housing.api.main"]

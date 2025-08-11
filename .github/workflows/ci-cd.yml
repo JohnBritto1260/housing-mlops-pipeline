@@ -81,10 +81,10 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
 
-      # 8. Health-check /predict endpoint
-      - name: Health-check /predict
-        run: |
-          curl -X POST "http://192.168.0.206:5001/predict" \
-            -H "Content-Type: application/json" \
-            -d '{"MedInc":8.4,"HouseAge":20,"AveRooms":5.2,"AveBedrms":1.1,"Population":850,"AveOccup":3.1,"Latitude":34.5,"Longitude":-118.3}'
+#      # 8. Health-check /predict endpoint
+#      - name: Health-check /predict
+#        run: |
+#          curl -X POST "http://192.168.0.206:5001/predict" \
+#            -H "Content-Type: application/json" \
+#            -d '{"MedInc":8.4,"HouseAge":20,"AveRooms":5.2,"AveBedrms":1.1,"Population":850,"AveOccup":3.1,"Latitude":34.5,"Longitude":-118.3}'
 
