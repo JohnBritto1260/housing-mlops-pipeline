@@ -24,7 +24,7 @@ RUN pip install --upgrade pip && \
     -r requirements.txt
 
 # ===== 3. Copy application code =====
-COPY housing ./housing
+COPY . .
 
 # ===== 4. Expose API port =====
 EXPOSE 5001
