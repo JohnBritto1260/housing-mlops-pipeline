@@ -1,104 +1,94 @@
 import os
 import logging
+from logging.handlers import RotatingFileHandler
 import sqlite3
 import json
 from datetime import datetime
 
-from flask import Flask, request, jsonify, g
+from flask import Flask, request, jsonify, g, Response
 import pandas as pd
 import mlflow
+from prometheus_client import Counter, generate_latest, CONTENT_TYPE_LATEST
 
-# Configure MLflow tracking
-mlflow.set_tracking_uri(
-    os.getenv("MLFLOW_TRACKING_URI", "http://192.168.0.206:5000")
-)
+# ------------------------------
+# 1. Setup Logging
+# ------------------------------
+LOG_DIR = "logs"
+os.makedirs(LOG_DIR, exist_ok=True)
 
-app = Flask(__name__)
+log_file_path = os.path.join(LOG_DIR, "app.log")
+file_handler = RotatingFileHandler(log_file_path, maxBytes=5 * 1024 * 1024, backupCount=5)
+file_handler.setLevel(logging.INFO)
+formatter = logging.Formatter("%(asctime)s [%(levelname)s] %(name)s - %(message)s")
+file_handler.setFormatter(formatter)
 
-# Configure logging
-logging.basicConfig(level=logging.INFO)
+console_handler = logging.StreamHandler()
+console_handler.setLevel(logging.INFO)
+console_handler.setFormatter(formatter)
+
+logging.basicConfig(level=logging.INFO, handlers=[file_handler, console_handler])
 logger = logging.getLogger(__name__)
 
-# SQLite DB setup
+# ------------------------------
+# 2. MLflow Model Setup
+# ------------------------------
+mlflow.set_tracking_uri(os.getenv("MLFLOW_TRACKING_URI", "http://192.168.0.206:5000"))
+model_name = "best_housing_model"
+logger.info(f"Loading MLflow model: {model_name}")
+model = mlflow.pyfunc.load_model(f"models:/{model_name}/latest")
+
+# ------------------------------
+# 3. Flask App & Database Setup
+# ------------------------------
+app = Flask(__name__)
 DATABASE = "logs.db"
 
+# Prometheus Counter
+PREDICT_REQUESTS = Counter(
+    "housing_predict_requests_total", 
+    "Total number of /predict requests"
+)
 
 def get_db():
-    """Get a SQLite database connection and initialize tables if needed."""
+    """Get SQLite connection and initialize tables."""
     db = getattr(g, "_database", None)
     if db is None:
         db = g._database = sqlite3.connect(DATABASE)
-        db.execute(
-            """
+        db.execute("""
             CREATE TABLE IF NOT EXISTS prediction_logs (
                 id INTEGER PRIMARY KEY AUTOINCREMENT,
                 timestamp TEXT NOT NULL,
                 input_data TEXT NOT NULL,
                 predictions TEXT NOT NULL
             )
-            """
-        )
-        db.execute(
-            """
-            CREATE TABLE IF NOT EXISTS metrics (
-                id INTEGER PRIMARY KEY AUTOINCREMENT,
-                endpoint TEXT NOT NULL,
-                count INTEGER NOT NULL
-            )
-            """
-        )
-        cur = db.execute(
-            "SELECT count(*) FROM metrics WHERE endpoint = '/predict'"
-        )
-        if cur.fetchone()[0] == 0:
-            db.execute(
-                "INSERT INTO metrics (endpoint, count) VALUES (?, ?)",
-                ('/predict', 0),
-            )
+        """)
         db.commit()
     return db
 
-
 @app.teardown_appcontext
 def close_connection(exception):
-    """Close the database connection on app context teardown."""
+    """Close database connection."""
     db = getattr(g, "_database", None)
     if db is not None:
         db.close()
 
-
-def increment_metric(endpoint):
-    """Increment request count for an endpoint."""
-    db = get_db()
-    db.execute(
-        "UPDATE metrics SET count = count + 1 WHERE endpoint = ?",
-        (endpoint,),
-    )
-    db.commit()
-
-
-# Load model once
-model_name = "best_housing_model"
-logger.info(f"Loading model: {model_name}")
-model = mlflow.pyfunc.load_model(f"models:/{model_name}/latest")
-
-
+# ------------------------------
+# 4. Routes
+# ------------------------------
 @app.route("/predict", methods=["POST"])
 def predict():
-    """Predict endpoint for housing prices."""
+    """Make predictions and log them."""
     if not request.is_json:
-        logger.error("Request content-type is not application/json")
-        return jsonify(
-            {"error": "Request content-type must be application/json"}
-        ), 400
+        logger.error("Invalid content-type: must be JSON")
+        return jsonify({"error": "Request content-type must be application/json"}), 400
 
     data = request.get_json()
     if not data:
-        logger.error("No input data provided")
+        logger.error("Empty request body")
         return jsonify({"error": "No input data provided"}), 400
 
     try:
-        # Wrap single record dictionary in a list if needed
+        # Convert input to DataFrame
         if isinstance(data, dict):
             input_df = pd.DataFrame([data])
         else:
@@ -106,49 +96,39 @@ def predict():
 
         expected_columns = [
             "MedInc", "HouseAge", "AveRooms", "AveBedrms",
-            "Population", "AveOccup", "Latitude", "Longitude",
+            "Population", "AveOccup", "Latitude", "Longitude"
         ]
-        input_df = input_df.astype(
-            {col: "float64" for col in expected_columns}
-        )
+        input_df = input_df.astype({col: "float64" for col in expected_columns})
 
-        logger.info(
-            "Received input for prediction: %s",
-            input_df.to_dict(orient='records'),
-        )
+        # Log input
+        logger.info(f"Prediction input: {input_df.to_dict(orient='records')}")
         preds = model.predict(input_df)
-        logger.info("Model predictions: %s", preds.tolist())
+        logger.info(f"Prediction output: {preds.tolist()}")
 
+        # Save to SQLite
         timestamp = datetime.utcnow().isoformat()
-        input_json = json.dumps(data)
-        preds_json = json.dumps(preds.tolist())
         db = get_db()
         db.execute(
-            """
-            INSERT INTO prediction_logs
-            (timestamp, input_data, predictions)
-            VALUES (?, ?, ?)
-            """,
-            (timestamp, input_json, preds_json),
+            "INSERT INTO prediction_logs (timestamp, input_data, predictions) VALUES (?, ?, ?)",
+            (timestamp, json.dumps(data), json.dumps(preds.tolist()))
         )
         db.commit()
 
-        increment_metric('/predict')
+        # Increment Prometheus metric
+        PREDICT_REQUESTS.inc()
 
         return jsonify({"predictions": preds.tolist()})
     except Exception as e:
-        logger.error("Prediction error: %s", e)
+        logger.exception("Prediction error")
         return jsonify({"error": str(e)}), 500
-
 
 @app.route("/metrics", methods=["GET"])
 def metrics():
-    """Return endpoint usage metrics."""
-    db = get_db()
-    cur = db.execute("SELECT endpoint, count FROM metrics")
-    metrics_data = {row[0]: row[1] for row in cur.fetchall()}
-    return jsonify(metrics_data)
+    """Expose Prometheus metrics."""
+    return Response(generate_latest(), mimetype=CONTENT_TYPE_LATEST)
 
-
+# ------------------------------
+# 5. Main Entry
+# ------------------------------
 if __name__ == "__main__":
     app.run(host="0.0.0.0", port=5001)

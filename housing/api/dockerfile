@@ -30,4 +30,4 @@ COPY . .
 EXPOSE 5001
 
 # ===== 5. Run API =====
-CMD ["python3", "-m", "main.py"]
+CMD ["python3", "-m", "main"]

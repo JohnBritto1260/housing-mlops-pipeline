@@ -11,3 +11,4 @@ joblib
 python-dotenv
 requests
 flake8
+prometheus_client
