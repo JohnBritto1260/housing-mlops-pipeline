@@ -47,13 +47,6 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-#      - name: Build and push
-#        uses: docker/build-push-action@v6
-#        with:
-#          context: .
-#          push: true
-#          tags: ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest,${{ secrets.DOCKERHUB_USERNAME }}/housing-api:${{ github.sha }}
-
       - name: Build with Docker Compose
         run: |
           docker compose build
@@ -65,14 +58,6 @@ jobs:
   deploy:
     needs: build-and-push
     runs-on: self-hosted
-#    steps:
-#      - name: Pull & Run Docker Locally
-#        run: |
-#          docker pull ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
-#          docker stop housing-api || true
-#          docker rm housing-api || true
-#          docker run -d --name housing-api -p 8000:8000 --restart always ${{ secrets.DOCKERHUB_USERNAME }}/housing-api:latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -81,10 +66,4 @@ jobs:
           docker compose pull
           docker compose up -d --remove-orphans
 
-#      # 8. Health-check /predict endpoint
-#      - name: Health-check /predict
-#        run: |
-#          curl -X POST "http://192.168.0.206:5001/predict" \
-#            -H "Content-Type: application/json" \
-#            -d '{"MedInc":8.4,"HouseAge":20,"AveRooms":5.2,"AveBedrms":1.1,"Population":850,"AveOccup":3.1,"Latitude":34.5,"Longitude":-118.3}'
 
