@@ -143,7 +143,9 @@ def predict():
         timestamp = datetime.utcnow().isoformat()
         db = get_db()
         db.execute(
-            "INSERT INTO prediction_logs (timestamp, input_data, predictions) VALUES (?, ?, ?)",
+            "INSERT INTO prediction_logs "
+            "(timestamp, input_data, predictions) "
+            "VALUES (?, ?, ?)",
             (timestamp, json.dumps(data), json.dumps(preds.tolist())),
         )
         db.commit()
