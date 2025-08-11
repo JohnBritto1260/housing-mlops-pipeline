@@ -10,7 +10,7 @@ from sklearn.model_selection import train_test_split
 from sklearn.tree import DecisionTreeRegressor
 
 # Set the MLflow tracking URI (your local MLflow server)
-mlflow.set_tracking_uri("http://192.168.0.206:5000")
+mlflow.set_tracking_uri("http://localhost:5000")
 
 
 def load_data():
