@@ -1,16 +1,16 @@
-import pandas as pd
-import mlflow
-import mlflow.sklearn
 import pickle
 
-from sklearn.model_selection import train_test_split
-from sklearn.linear_model import LinearRegression
-from sklearn.tree import DecisionTreeRegressor
-from sklearn.metrics import mean_squared_error, mean_absolute_error
+import mlflow
+import mlflow.sklearn
+import pandas as pd
 from mlflow.models.signature import infer_signature
+from sklearn.linear_model import LinearRegression
+from sklearn.metrics import mean_squared_error, mean_absolute_error
+from sklearn.model_selection import train_test_split
+from sklearn.tree import DecisionTreeRegressor
 
 # Set the MLflow tracking URI (your local MLflow server)
-mlflow.set_tracking_uri("http://localhost:5000")
+mlflow.set_tracking_uri("http://192.168.0.206:5000")
 
 
 def load_data():
@@ -18,14 +18,7 @@ def load_data():
     return pd.read_csv("housing/data/raw/california.csv")
 
 
-def train_and_register_model(
-    model,
-    model_name,
-    X_train,
-    y_train,
-    X_test,
-    y_test
-):
+def train_and_register_model(model, model_name, X_train, y_train, X_test, y_test):
     """Train, log, and register a model with MLflow."""
     with mlflow.start_run(run_name=model_name) as run:
         print(f"🏃 Training and logging model: {model_name}")
@@ -45,10 +38,7 @@ def train_and_register_model(
         # Log model
         artifact_path = f"{model_name}_model"
         input_example = X_test[:1]
-        signature = infer_signature(
-            X_train,
-            model.predict(X_train)
-        )
+        signature = infer_signature(X_train, model.predict(X_train))
 
         mlflow.sklearn.log_model(
             model,
@@ -75,19 +65,19 @@ def train_and_register_model(
             f"{run.info.run_id}"
         )
 
-        # --- NEW: Save local pickle file for the LinearRegression model ---
+        # Save local pickle files
         if model_name == "LinearRegression":
             local_path = "housing/models/LinearRegression.pkl"
             with open(local_path, "wb") as f:
                 pickle.dump(model, f)
             print(f"💾 Saved local pickle model at: {local_path}")
 
-        # --- NEW: Save local pickle file for the DecisionTree model ---
         if model_name == "DecisionTree":
             local_path = "housing/models/DecisionTree.pkl"
             with open(local_path, "wb") as f:
                 pickle.dump(model, f)
             print(f"💾 Saved local pickle model at: {local_path}")
+
 
 if __name__ == "__main__":
     # Load and split data
@@ -95,10 +85,7 @@ if __name__ == "__main__":
     X = df.drop("MedHouseVal", axis=1)
     y = df["MedHouseVal"]
     X_train, X_test, y_train, y_test = train_test_split(
-        X,
-        y,
-        test_size=0.2,
-        random_state=42
+        X, y, test_size=0.2, random_state=42
     )
 
     # Train and register both models
@@ -108,13 +95,14 @@ if __name__ == "__main__":
         X_train,
         y_train,
         X_test,
-        y_test
+        y_test,
     )
+
     train_and_register_model(
         DecisionTreeRegressor(max_depth=5),
         "DecisionTree",
         X_train,
         y_train,
         X_test,
-        y_test
+        y_test,
     )
