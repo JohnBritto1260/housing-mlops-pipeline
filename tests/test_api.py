@@ -1,15 +1,16 @@
 import pytest
-import json
-from housing.api.main import app, get_db
+from housing.api.main import app
+
 
 @pytest.fixture
 def client():
-    app.config['TESTING'] = True
+    app.config["TESTING"] = True
     with app.test_client() as client:
         yield client
 
+
 def test_predict_success(client):
-    # Replace with your model's actual expected input feature names
+    """Test prediction endpoint with valid data."""
     payload = [{
         "MedInc": 8.3252,
         "HouseAge": 41.0,
@@ -18,7 +19,7 @@ def test_predict_success(client):
         "Population": 322.0,
         "AveOccup": 2.555556,
         "Latitude": 37.88,
-        "Longitude": -122.23
+        "Longitude": -122.23,
     }]
     response = client.post("/predict", json=payload)
     assert response.status_code == 200
@@ -26,13 +27,17 @@ def test_predict_success(client):
     assert "predictions" in data
     assert isinstance(data["predictions"], list)
 
+
 def test_predict_no_data(client):
+    """Test prediction endpoint with no data."""
     response = client.post("/predict", json=None)
     assert response.status_code == 400
     data = response.get_json()
     assert "error" in data
 
+
 def test_metrics_endpoint(client):
+    """Test metrics endpoint returns correct format."""
     response = client.get("/metrics")
     assert response.status_code == 200
     data = response.get_json()
