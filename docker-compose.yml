@@ -24,14 +24,14 @@ services:
 #    depends_on:
 #      - mlflow
 
-#  prometheus:
-#    image: prom/prometheus:latest
-#    volumes:
-#      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
-#    ports:
-#      - "9090:9090"
-#    depends_on:
-#      - api
+  prometheus:
+    image: prom/prometheus:latest
+    volumes:
+      - ./monitoring/prometheus.yml:/etc/prometheus/prometheus.yml:ro
+    ports:
+      - "9090:9090"
+    depends_on:
+      - api
 #
 #  grafana:
 #    image: grafana/grafana:latest
