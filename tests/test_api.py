@@ -40,6 +40,6 @@ def test_metrics_endpoint(client):
     """Test metrics endpoint returns correct format."""
     response = client.get("/metrics")
     assert response.status_code == 200
-    data = response.get_json()
-    assert "/predict" in data
-    assert isinstance(data["/predict"], int)
+    data = response.data.decode("utf-8")
+    assert "housing_predict_requests_total" in data
+    assert "predict" in data
