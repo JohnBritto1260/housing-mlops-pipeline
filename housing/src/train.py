@@ -18,11 +18,11 @@ def load_data():
     return pd.read_csv("housing/data/raw/california.csv")
 
 
-def train_and_register_model(model, 
-    model_name, 
-    X_train, 
-    y_train, 
-    X_test, 
+def train_and_register_model(model,
+    model_name,
+    X_train,
+    y_train,
+    X_test,
     y_test):
     """Train, log, and register a model with MLflow."""
     with mlflow.start_run(run_name=model_name) as run:
