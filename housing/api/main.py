@@ -43,7 +43,7 @@ logger = logging.getLogger(__name__)
 # 2. MLflow Model Setup
 # ------------------------------
 mlflow.set_tracking_uri(
-    os.getenv("MLFLOW_TRACKING_URI", "http://192.168.0.206:5000")
+    os.getenv("MLFLOW_TRACKING_URI", "http://192.168.0.105:5000")
 )
 model_name = "best_housing_model"
 logger.info(f"Loading MLflow model: {model_name}")
